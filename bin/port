@@ -1,0 +1,7 @@
+#!/usr/bin/env bun
+import { runCli } from "../src/cli";
+
+const handled = await runCli(process.argv.slice(2));
+if (!handled) {
+	await import("../src/index.tsx");
+}

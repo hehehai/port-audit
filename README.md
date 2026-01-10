@@ -14,12 +14,28 @@ A TUI tool for managing TCP listening ports on macOS.
 
 ```bash
 bun install
+bun link
 ```
 
 ## Usage
 
 ```bash
+port
+```
+
+For development:
+
+```bash
 bun dev
+```
+
+## CLI
+
+```bash
+port --help
+port list
+port list -s 3001
+port k 3001
 ```
 
 ## Keybindings

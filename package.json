@@ -1,20 +1,25 @@
 {
-  "name": "port-audit",
-  "module": "src/index.tsx",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "dev": "bun run --watch src/index.tsx"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@opentui/core": "^0.1.69",
-    "@opentui/react": "^0.1.69",
-    "react": "^19.2.3"
-  }
+	"name": "port-audit",
+	"module": "src/index.tsx",
+	"type": "module",
+	"private": true,
+	"bin": {
+		"port": "bin/port"
+	},
+	"scripts": {
+		"dev:tui": "bun run --watch src/index.tsx",
+		"dev:cli": "bun run bin/port",
+		"start:tui": "bun run src/index.tsx"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@opentui/core": "^0.1.69",
+		"@opentui/react": "^0.1.69",
+		"react": "^19.2.3"
+	}
 }
