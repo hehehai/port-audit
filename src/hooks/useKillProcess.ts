@@ -8,7 +8,14 @@ interface UseKillProcessResult {
 	clearResult: () => void;
 }
 
-export function useKillProcess(): UseKillProcessResult {
+type UseKillProcessOptions = {
+	killProcess?: typeof killProcess;
+};
+
+export function useKillProcess(
+	options: UseKillProcessOptions = {},
+): UseKillProcessResult {
+	const { killProcess: kill = killProcess } = options;
 	const [killing, setKilling] = useState(false);
 	const [lastResult, setLastResult] = useState<{
 		pid: number;
@@ -16,19 +23,22 @@ export function useKillProcess(): UseKillProcessResult {
 		error?: string;
 	} | null>(null);
 
-	const kill = useCallback(async (pid: number) => {
-		setKilling(true);
-		try {
-			const result = await killProcess(pid);
-			setLastResult({ pid, ...result });
-		} finally {
-			setKilling(false);
-		}
-	}, []);
+	const triggerKill = useCallback(
+		async (pid: number) => {
+			setKilling(true);
+			try {
+				const result = await kill(pid);
+				setLastResult({ pid, ...result });
+			} finally {
+				setKilling(false);
+			}
+		},
+		[kill],
+	);
 
 	const clearResult = useCallback(() => {
 		setLastResult(null);
 	}, []);
 
-	return { killing, lastResult, kill, clearResult };
+	return { killing, lastResult, kill: triggerKill, clearResult };
 }

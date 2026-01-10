@@ -24,6 +24,7 @@
 		"start:tui": "bun run src/index.tsx",
 		"cli": "bun run bin/port",
 		"lint": "oxlint src --tsconfig tsconfig.json",
+		"test": "bun test",
 		"build:bin": "bun build --compile src/entry.ts --outfile dist/port"
 	},
 	"devDependencies": {

@@ -75,6 +75,12 @@ Lint:
 bun run lint
 ```
 
+Test:
+
+```bash
+bun run test
+```
+
 ## CLI
 
 ```bash

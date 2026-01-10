@@ -12,7 +12,7 @@ export async function getListeningProcesses(): Promise<ProcessInfo[]> {
 	return parseLsofOutput(output);
 }
 
-function parseLsofOutput(output: string): ProcessInfo[] {
+export function parseLsofOutput(output: string): ProcessInfo[] {
 	const lines = output.trim().split("\n");
 	if (lines.length <= 1) return [];
 

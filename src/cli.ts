@@ -1,3 +1,4 @@
+import type { ProcessInfo } from "./types";
 import { getListeningProcesses, killProcess } from "./utils/process";
 
 const HELP_TEXT = `port - Manage listening TCP ports
@@ -19,7 +20,20 @@ type ListOptions = {
 	search?: string;
 };
 
-export async function runCli(args: string[]): Promise<boolean> {
+type CliDeps = {
+	getListeningProcesses: () => Promise<ProcessInfo[]>;
+	killProcess: (pid: number) => Promise<{ success: boolean; error?: string }>;
+};
+
+const defaultDeps: CliDeps = {
+	getListeningProcesses,
+	killProcess,
+};
+
+export async function runCli(
+	args: string[],
+	deps: CliDeps = defaultDeps,
+): Promise<boolean> {
 	if (args.length === 0) return false;
 
 	const [command, ...rest] = args;
@@ -31,13 +45,13 @@ export async function runCli(args: string[]): Promise<boolean> {
 
 	if (command === "list" || command === "ls") {
 		const options = parseListOptions(rest);
-		await handleList(options);
+		await handleList(options, deps);
 		return true;
 	}
 
 	if (command === "k" || command === "kill") {
 		const target = rest[0];
-		await handleKill(target);
+		await handleKill(target, deps);
 		return true;
 	}
 
@@ -77,8 +91,8 @@ function parseListOptions(args: string[]): ListOptions {
 	return options;
 }
 
-async function handleList(options: ListOptions) {
-	const processes = await getListeningProcesses();
+async function handleList(options: ListOptions, deps: CliDeps) {
+	const processes = await deps.getListeningProcesses();
 	const filtered = applySearch(processes, options.search);
 
 	if (filtered.length === 0) {
@@ -98,7 +112,7 @@ async function handleList(options: ListOptions) {
 	);
 }
 
-async function handleKill(target?: string) {
+async function handleKill(target: string | undefined, deps: CliDeps) {
 	if (!target) {
 		printError("Missing port. Example: port k 3001");
 		process.exitCode = 1;
@@ -112,7 +126,7 @@ async function handleKill(target?: string) {
 		return;
 	}
 
-	const processes = await getListeningProcesses();
+	const processes = await deps.getListeningProcesses();
 	const matches = processes.filter((proc) => proc.port === port);
 
 	if (matches.length === 0) {
@@ -123,7 +137,7 @@ async function handleKill(target?: string) {
 
 	let anyFailure = false;
 	for (const proc of matches) {
-		const result = await killProcess(proc.pid);
+		const result = await deps.killProcess(proc.pid);
 		if (result.success) {
 			process.stdout.write(
 				`Killed PID ${proc.pid} (port ${proc.port}, ${proc.command})\n`,
@@ -141,10 +155,7 @@ async function handleKill(target?: string) {
 	}
 }
 
-function applySearch(
-	processes: Awaited<ReturnType<typeof getListeningProcesses>>,
-	search?: string,
-) {
+function applySearch(processes: ProcessInfo[], search?: string) {
 	if (!search) return processes;
 	const term = search.toLowerCase();
 	return processes.filter((proc) => {
