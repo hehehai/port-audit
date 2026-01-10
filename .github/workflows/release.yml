@@ -55,19 +55,27 @@ jobs:
     environment: public
     permissions:
       contents: read
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - name: Checkout
-        if: ${{ secrets.NPM_TOKEN != '' }}
         uses: actions/checkout@v4
+      - name: Debug npm config
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "NPM_TOKEN is set"
+          else
+            echo "NPM_TOKEN is missing"
+          fi
       - name: Setup Bun
-        if: ${{ secrets.NPM_TOKEN != '' }}
+        if: ${{ env.NPM_TOKEN != '' }}
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
       - name: Publish to npm
-        if: ${{ secrets.NPM_TOKEN != '' }}
+        if: ${{ env.NPM_TOKEN != '' }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken="$NODE_AUTH_TOKEN"
           npm publish --access public
@@ -78,21 +86,36 @@ jobs:
     environment: public
     permissions:
       contents: read
+    env:
+      HOMEBREW_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+      HOMEBREW_TAP: ${{ secrets.HOMEBREW_TAP }}
+      HOMEBREW_FORMULA: ${{ secrets.HOMEBREW_FORMULA }}
     steps:
       - name: Setup Homebrew
-        if: ${{ secrets.HOMEBREW_TOKEN != '' }}
+        if: ${{ env.HOMEBREW_TOKEN != '' }}
         uses: Homebrew/actions/setup-homebrew@master
-      - name: Prepare formula update
-        if: ${{ secrets.HOMEBREW_TOKEN != '' }}
-        env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
-          HOMEBREW_TAP: ${{ secrets.HOMEBREW_TAP }}
-          HOMEBREW_FORMULA: ${{ secrets.HOMEBREW_FORMULA }}
+      - name: Debug brew config
         run: |
-          if [ -z "$HOMEBREW_TAP" ] || [ -z "$HOMEBREW_FORMULA" ]; then
-            echo "HOMEBREW_TAP and HOMEBREW_FORMULA secrets are required."
-            exit 1
+          if [ -n "$HOMEBREW_TOKEN" ]; then
+            echo "HOMEBREW_TOKEN is set"
+          else
+            echo "HOMEBREW_TOKEN is missing"
           fi
+          if [ -n "$HOMEBREW_TAP" ]; then
+            echo "HOMEBREW_TAP=$HOMEBREW_TAP"
+          else
+            echo "HOMEBREW_TAP is missing"
+          fi
+          if [ -n "$HOMEBREW_FORMULA" ]; then
+            echo "HOMEBREW_FORMULA=$HOMEBREW_FORMULA"
+          else
+            echo "HOMEBREW_FORMULA is missing"
+          fi
+      - name: Prepare formula update
+        if: ${{ env.HOMEBREW_TOKEN != '' }}
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ env.HOMEBREW_TOKEN }}
+        run: |
           URL="https://github.com/${{ github.repository }}/archive/refs/tags/${{ github.ref_name }}.tar.gz"
           curl -L "$URL" -o source.tar.gz
           SHA256=$(shasum -a 256 source.tar.gz | awk '{print $1}')

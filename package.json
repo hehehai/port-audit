@@ -1,6 +1,6 @@
 {
 	"name": "@hehehai/port-audit",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "A TUI tool for managing TCP listening ports on macOS.",
 	"license": "MIT",
 	"module": "src/index.tsx",
