@@ -1,0 +1,118 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tarball: ${{ steps.pack.outputs.tarball }}
+      sha256: ${{ steps.pack.outputs.sha256 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Verify tag version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "v$VERSION" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version $VERSION"
+            exit 1
+          fi
+      - name: Pack
+        id: pack
+        run: |
+          TARBALL=$(npm pack --silent)
+          SHA256=$(shasum -a 256 "$TARBALL" | awk '{print $1}')
+          echo "$SHA256  $TARBALL" > "$TARBALL.sha256"
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "sha_file=$TARBALL.sha256" >> "$GITHUB_OUTPUT"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.pack.outputs.tarball }}
+            ${{ steps.pack.outputs.sha_file }}
+
+  publish-npm:
+    needs: release
+    if: ${{ secrets.NPM_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken="$NODE_AUTH_TOKEN"
+          npm publish --access public
+
+  publish-brew:
+    needs: release
+    if: ${{ secrets.HOMEBREW_TOKEN != '' }}
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Setup Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Prepare formula update
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+          HOMEBREW_TAP: ${{ secrets.HOMEBREW_TAP }}
+          HOMEBREW_FORMULA: ${{ secrets.HOMEBREW_FORMULA }}
+        run: |
+          if [ -z "$HOMEBREW_TAP" ] || [ -z "$HOMEBREW_FORMULA" ]; then
+            echo "HOMEBREW_TAP and HOMEBREW_FORMULA secrets are required."
+            exit 1
+          fi
+          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${{ github.ref_name }}.tar.gz"
+          curl -L "$URL" -o source.tar.gz
+          SHA256=$(shasum -a 256 source.tar.gz | awk '{print $1}')
+          brew tap "$HOMEBREW_TAP"
+          brew bump-formula-pr --write-only --no-audit --no-browse \
+            --url "$URL" \
+            --sha256 "$SHA256" \
+            "$HOMEBREW_FORMULA"
+
+  publish-github:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm config set //npm.pkg.github.com/:_authToken="$NODE_AUTH_TOKEN"
+          npm publish --registry https://npm.pkg.github.com

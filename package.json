@@ -1,18 +1,23 @@
 {
-	"name": "port-audit",
+	"name": "@hehehai/port-audit",
+	"version": "0.1.0",
+	"description": "A TUI tool for managing TCP listening ports on macOS.",
+	"license": "MIT",
 	"module": "src/index.tsx",
 	"type": "module",
-	"private": true,
 	"bin": {
 		"port": "bin/port"
 	},
 	"scripts": {
 		"dev:tui": "bun run --watch src/index.tsx",
 		"dev:cli": "bun run bin/port",
-		"start:tui": "bun run src/index.tsx"
+		"start:tui": "bun run src/index.tsx",
+		"cli": "bun run bin/port",
+		"lint": "oxlint src --tsconfig tsconfig.json"
 	},
 	"devDependencies": {
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"oxlint": "^0.9.0"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
