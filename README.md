@@ -1,7 +1,7 @@
 # port-audit
 
-[![CI](https://github.com/guanwei/port-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/guanwei/port-audit/actions/workflows/ci.yml)
-[![Release](https://github.com/guanwei/port-audit/actions/workflows/release.yml/badge.svg)](https://github.com/guanwei/port-audit/actions/workflows/release.yml)
+[![CI](https://github.com/hehehai/port-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/hehehai/port-audit/actions/workflows/ci.yml)
+[![Release](https://github.com/hehehai/port-audit/actions/workflows/release.yml/badge.svg)](https://github.com/hehehai/port-audit/actions/workflows/release.yml)
 
 A TUI tool for managing TCP listening ports on macOS.
 
