@@ -1,7 +1,13 @@
-#!/usr/bin/env bun
-import { runCli } from "../src/cli";
+#!/usr/bin/env sh
+DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
-const handled = await runCli(process.argv.slice(2));
-if (!handled) {
-	await import("../src/index.tsx");
-}
+if [ -x "$DIR/../dist/port" ]; then
+  exec "$DIR/../dist/port" "$@"
+fi
+
+if command -v bun >/dev/null 2>&1; then
+  exec bun "$DIR/../src/entry.ts" "$@"
+fi
+
+echo "port: missing compiled binary (dist/port) and bun runtime." >&2
+exit 1

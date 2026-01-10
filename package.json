@@ -3,8 +3,18 @@
 	"version": "0.1.3",
 	"description": "A TUI tool for managing TCP listening ports on macOS.",
 	"license": "MIT",
+	"os": [
+		"darwin"
+	],
 	"module": "src/index.tsx",
 	"type": "module",
+	"files": [
+		"bin/port",
+		"dist/port",
+		"src",
+		"README.md",
+		"package.json"
+	],
 	"bin": {
 		"port": "bin/port"
 	},
@@ -13,7 +23,8 @@
 		"dev:cli": "bun run bin/port",
 		"start:tui": "bun run src/index.tsx",
 		"cli": "bun run bin/port",
-		"lint": "oxlint src --tsconfig tsconfig.json"
+		"lint": "oxlint src --tsconfig tsconfig.json",
+		"build:bin": "bun build --compile src/entry.ts --outfile dist/port"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

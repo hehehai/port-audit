@@ -11,12 +11,9 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: write
-    outputs:
-      tarball: ${{ steps.pack.outputs.tarball }}
-      sha256: ${{ steps.pack.outputs.sha256 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +23,10 @@ jobs:
           bun-version: latest
       - name: Install
         run: bun install --frozen-lockfile
+      - name: Build binary
+        run: |
+          bun run build:bin
+          chmod +x dist/port
       - name: Verify tag version
         run: |
           VERSION=$(node -p "require('./package.json').version")
@@ -33,10 +34,11 @@ jobs:
             echo "Tag ${GITHUB_REF_NAME} does not match package.json version $VERSION"
             exit 1
           fi
-      - name: Pack
-        id: pack
+      - name: Package binary
+        id: package
         run: |
-          TARBALL=$(npm pack --silent)
+          TARBALL="port-audit-${GITHUB_REF_NAME}-macos.tar.gz"
+          tar -czf "$TARBALL" -C dist port
           SHA256=$(shasum -a 256 "$TARBALL" | awk '{print $1}')
           echo "$SHA256  $TARBALL" > "$TARBALL.sha256"
           echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
@@ -46,12 +48,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ steps.pack.outputs.tarball }}
-            ${{ steps.pack.outputs.sha_file }}
+            ${{ steps.package.outputs.tarball }}
+            ${{ steps.package.outputs.sha_file }}
 
   publish-npm:
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     environment: public
     permissions:
       contents: read
@@ -72,6 +74,14 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
+      - name: Install
+        if: ${{ env.NPM_TOKEN != '' }}
+        run: bun install --frozen-lockfile
+      - name: Build binary
+        if: ${{ env.NPM_TOKEN != '' }}
+        run: |
+          bun run build:bin
+          chmod +x dist/port
       - name: Publish to npm
         if: ${{ env.NPM_TOKEN != '' }}
         env:
@@ -116,7 +126,7 @@ jobs:
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ env.HOMEBREW_TOKEN }}
         run: |
-          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${{ github.ref_name }}.tar.gz"
+          URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/port-audit-${{ github.ref_name }}-macos.tar.gz"
           curl -L "$URL" -o source.tar.gz
           SHA256=$(shasum -a 256 source.tar.gz | awk '{print $1}')
           brew tap "$HOMEBREW_TAP"
@@ -127,7 +137,7 @@ jobs:
 
   publish-github:
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: read
       packages: write
@@ -138,6 +148,12 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Build binary
+        run: |
+          bun run build:bin
+          chmod +x dist/port
       - name: Publish to GitHub Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -15,7 +15,7 @@ A TUI tool for managing TCP listening ports on macOS.
 
 ## Requirements
 
-- [Bun](https://bun.sh) runtime
+- [Bun](https://bun.sh) runtime (development only)
 
 ## Installation
 
@@ -25,17 +25,29 @@ Homebrew:
 brew install hehehai/tap/port-audit
 ```
 
+No Bun runtime is required for the prebuilt binary.
+
 npm:
 
 ```bash
 npm i -g @hehehai/port-audit
 ```
 
+macOS only. The npm package ships a prebuilt binary.
+
 GitHub Packages:
 
 ```bash
 npm config set @hehehai:registry https://npm.pkg.github.com
 npm i -g @hehehai/port-audit
+```
+
+GitHub Release (macOS binary):
+
+```bash
+curl -L -o port-audit.tar.gz https://github.com/hehehai/port-audit/releases/download/vX.Y.Z/port-audit-vX.Y.Z-macos.tar.gz
+tar -xzf port-audit.tar.gz
+./port --help
 ```
 
 From source:
@@ -99,6 +111,7 @@ bun run cli -- --help
 ## Release Automation
 
 GitHub Actions publishes on tags like `v0.1.0`.
+Releases include a macOS binary tarball used by Homebrew.
 
 Required secrets:
 
