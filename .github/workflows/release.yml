@@ -11,7 +11,40 @@ permissions:
 
 jobs:
   release:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify tag version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "v$VERSION" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version $VERSION"
+            exit 1
+          fi
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+
+  build-binaries:
+    needs: release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: macos
+            build_script: build:bin
+            bin_name: port
+          - os: ubuntu-latest
+            target: linux
+            build_script: build:bin
+            bin_name: port
+          - os: windows-latest
+            target: windows
+            build_script: build:bin:win
+            bin_name: port.exe
     permissions:
       contents: write
     steps:
@@ -24,27 +57,22 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
       - name: Build binary
-        run: |
-          bun run build:bin
-          chmod +x dist/port
-      - name: Verify tag version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          if [ "v$VERSION" != "${GITHUB_REF_NAME}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match package.json version $VERSION"
-            exit 1
-          fi
+        run: bun run ${{ matrix.build_script }}
       - name: Package binary
         id: package
+        shell: bash
         run: |
-          TARBALL="port-audit-${GITHUB_REF_NAME}-macos.tar.gz"
-          tar -czf "$TARBALL" -C dist port
-          SHA256=$(shasum -a 256 "$TARBALL" | awk '{print $1}')
+          if [ "${{ matrix.os }}" != "windows-latest" ]; then
+            chmod +x "dist/${{ matrix.bin_name }}"
+          fi
+          TARBALL="port-audit-${GITHUB_REF_NAME}-${{ matrix.target }}.tar.gz"
+          tar -czf "$TARBALL" -C dist "${{ matrix.bin_name }}"
+          SHA256=$(node -e "const fs=require('fs');const crypto=require('crypto');const data=fs.readFileSync('${TARBALL}');console.log(crypto.createHash('sha256').update(data).digest('hex'));")
           echo "$SHA256  $TARBALL" > "$TARBALL.sha256"
           echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
           echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
           echo "sha_file=$TARBALL.sha256" >> "$GITHUB_OUTPUT"
-      - name: Create GitHub Release
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |

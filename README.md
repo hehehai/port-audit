@@ -50,11 +50,33 @@ tar -xzf port-audit.tar.gz
 ./port --help
 ```
 
+GitHub Release (Linux binary):
+
+```bash
+curl -L -o port-audit.tar.gz https://github.com/hehehai/port-audit/releases/download/vX.Y.Z/port-audit-vX.Y.Z-linux.tar.gz
+tar -xzf port-audit.tar.gz
+./port --help
+```
+
+GitHub Release (Windows binary):
+
+```powershell
+curl -L -o port-audit.tar.gz https://github.com/hehehai/port-audit/releases/download/vX.Y.Z/port-audit-vX.Y.Z-windows.tar.gz
+tar -xzf port-audit.tar.gz
+.\port.exe --help
+```
+
 From source:
 
 ```bash
 bun install
 bun link
+```
+
+One-line installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hehehai/port-audit/main/scripts/install.sh | sh
 ```
 
 ## Usage
@@ -117,7 +139,7 @@ bun run cli -- --help
 ## Release Automation
 
 GitHub Actions publishes on tags like `v0.1.0`.
-Releases include a macOS binary tarball used by Homebrew.
+Releases include macOS/Linux/Windows binary tarballs used for direct installs.
 
 Required secrets:
 
