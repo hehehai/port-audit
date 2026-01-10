@@ -1,15 +1,41 @@
-# react
+# port-audit
 
-To install dependencies:
+A TUI tool for managing TCP listening ports on macOS.
+
+## Features
+
+- List all TCP listening ports
+- Real-time refresh (every 2 seconds)
+- Search filter (by port number or process name)
+- Kill processes (SIGTERM → SIGKILL)
+- Tokyo Night theme
+
+## Installation
 
 ```bash
 bun install
 ```
 
-To run:
+## Usage
 
 ```bash
 bun dev
 ```
 
-This project was created using `bun create tui`. [create-tui](https://git.new/create-tui) is the easiest way to get started with OpenTUI.
+## Keybindings
+
+| Key | Action |
+|---|---|
+| `↑/k` | Move up |
+| `↓/j` | Move down |
+| `/` | Search |
+| `esc` | Exit search |
+| `x/Enter` | Kill process |
+| `r` | Refresh |
+| `q` | Quit |
+
+## Tech Stack
+
+- [OpenTUI](https://opentui.dev) - Terminal UI framework
+- React 19
+- Bun
