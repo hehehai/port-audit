@@ -153,15 +153,23 @@ jobs:
         if: ${{ env.HOMEBREW_TOKEN != '' }}
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ env.HOMEBREW_TOKEN }}
+          GH_TOKEN: ${{ env.HOMEBREW_TOKEN }}
         run: |
           URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/port-audit-${{ github.ref_name }}-macos.tar.gz"
           curl -L "$URL" -o source.tar.gz
           SHA256=$(shasum -a 256 source.tar.gz | awk '{print $1}')
           brew tap "$HOMEBREW_TAP"
-          brew bump-formula-pr --write-only --no-audit --no-browse \
+          OUTPUT=$(brew bump-formula-pr --no-audit --no-browse \
             --url "$URL" \
             --sha256 "$SHA256" \
-            "$HOMEBREW_FORMULA"
+            "$HOMEBREW_FORMULA")
+          echo "$OUTPUT"
+          PR_URL=$(echo "$OUTPUT" | grep -Eo "https://github.com/[^ ]+" | tail -n 1)
+          if [ -n "$PR_URL" ]; then
+            gh pr merge --auto --squash "$PR_URL"
+          else
+            echo "No PR URL detected; skipping auto-merge."
+          fi
 
   publish-github:
     needs: release
