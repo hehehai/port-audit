@@ -51,18 +51,21 @@ jobs:
 
   publish-npm:
     needs: release
-    if: ${{ secrets.NPM_TOKEN != '' }}
     runs-on: ubuntu-latest
+    environment: public
     permissions:
       contents: read
     steps:
       - name: Checkout
+        if: ${{ secrets.NPM_TOKEN != '' }}
         uses: actions/checkout@v4
       - name: Setup Bun
+        if: ${{ secrets.NPM_TOKEN != '' }}
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
       - name: Publish to npm
+        if: ${{ secrets.NPM_TOKEN != '' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -71,14 +74,16 @@ jobs:
 
   publish-brew:
     needs: release
-    if: ${{ secrets.HOMEBREW_TOKEN != '' }}
     runs-on: macos-latest
+    environment: public
     permissions:
       contents: read
     steps:
       - name: Setup Homebrew
+        if: ${{ secrets.HOMEBREW_TOKEN != '' }}
         uses: Homebrew/actions/setup-homebrew@master
       - name: Prepare formula update
+        if: ${{ secrets.HOMEBREW_TOKEN != '' }}
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
           HOMEBREW_TAP: ${{ secrets.HOMEBREW_TAP }}
