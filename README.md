@@ -1,6 +1,7 @@
 # port-audit
 
 [![CI](https://github.com/hehehai/port-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/hehehai/port-audit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
 <div align="center"><video src="https://github.com/user-attachments/assets/7edb86a8-213f-4a78-8374-51814963ba2b" controls></video></div>
@@ -144,16 +145,3 @@ bun run cli -- --help
 - [OpenTUI](https://opentui.dev) - Terminal UI framework
 - React 19
 - Bun
-
-## Release Automation
-
-GitHub Actions publishes on tags like `v0.1.0`.
-Releases include macOS/Linux/Windows binary tarballs used for direct installs.
-
-Required secrets:
-
-- `NPM_TOKEN` for npm publish
-- `HOMEBREW_TOKEN` for Homebrew tap updates
-- `HOMEBREW_TAP` (e.g. `hehehai/tap`)
-- `HOMEBREW_FORMULA` (e.g. `port-audit`)
-- `GITHUB_TOKEN` is used automatically for GitHub Packages publish
