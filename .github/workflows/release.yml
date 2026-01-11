@@ -143,11 +143,12 @@ jobs:
           node -e "const fs=require('fs');const path='packages/portaudit/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.version='${VERSION}';pkg.dependencies['@hehehai/port-audit']='${VERSION}';fs.writeFileSync(path, JSON.stringify(pkg, null, 2)+'\\n');"
       - name: Publish portaudit
         if: ${{ env.NPM_TOKEN != '' }}
+        working-directory: packages/portaudit
         env:
           NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken="$NODE_AUTH_TOKEN"
-          npm publish --access public packages/portaudit
+          npm publish --access public
 
   publish-brew:
     needs: release
