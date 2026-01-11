@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import type { ProcessInfo } from "./types";
 import { getListeningProcesses, killProcess } from "./utils/process";
 
@@ -8,6 +9,7 @@ Usage:
   port list            List listening ports
   port list -s <term>  Filter by port or process name
   port k <port>        Kill process(es) by port
+  port --version       Show version
   port --help          Show help
 
 Examples:
@@ -43,6 +45,12 @@ export async function runCli(
 		return true;
 	}
 
+	if (command === "-v" || command === "--version" || command === "version") {
+		const version = await getVersion();
+		process.stdout.write(`${version}\n`);
+		return true;
+	}
+
 	if (command === "list" || command === "ls") {
 		const options = parseListOptions(rest);
 		await handleList(options, deps);
@@ -67,6 +75,21 @@ function printHelp() {
 
 function printError(message: string) {
 	process.stderr.write(`${message}\n`);
+}
+
+async function getVersion(): Promise<string> {
+	if (process.env.npm_package_version) {
+		return process.env.npm_package_version;
+	}
+
+	try {
+		const packageJsonPath = new URL("../package.json", import.meta.url);
+		const contents = await readFile(packageJsonPath.toString(), "utf-8");
+		const data = JSON.parse(contents) as { version?: string };
+		return data.version ?? "unknown";
+	} catch {
+		return "unknown";
+	}
 }
 
 function parseListOptions(args: string[]): ListOptions {
