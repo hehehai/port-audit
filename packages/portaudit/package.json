@@ -1,0 +1,12 @@
+{
+	"name": "portaudit",
+	"version": "0.1.7",
+	"description": "npx-friendly wrapper for @hehehai/port-audit",
+	"license": "MIT",
+	"bin": {
+		"portaudit": "bin/portaudit"
+	},
+	"dependencies": {
+		"@hehehai/port-audit": "0.1.7"
+	}
+}

@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { existsSync } from "node:fs";
+
+const require = createRequire(import.meta.url);
+const pkgPath = require.resolve("@hehehai/port-audit/package.json");
+const pkgDir = dirname(pkgPath);
+const isWin = process.platform === "win32";
+
+const binCandidates = [
+	join(pkgDir, "dist", isWin ? "port.exe" : "port"),
+	join(pkgDir, "bin", "port"),
+];
+
+const binPath = binCandidates.find((candidate) => existsSync(candidate));
+if (!binPath) {
+	console.error("portaudit: @hehehai/port-audit binary not found.");
+	process.exit(1);
+}
+
+const child = spawn(binPath, process.argv.slice(2), { stdio: "inherit" });
+child.on("exit", (code) => process.exit(code ?? 1));

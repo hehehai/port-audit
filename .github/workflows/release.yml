@@ -118,6 +118,37 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken="$NODE_AUTH_TOKEN"
           npm publish --access public
 
+  publish-npm-bridge:
+    needs: release
+    runs-on: ubuntu-latest
+    environment: public
+    permissions:
+      contents: read
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Debug npm config
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "NPM_TOKEN is set"
+          else
+            echo "NPM_TOKEN is missing"
+          fi
+      - name: Sync portaudit version
+        if: ${{ env.NPM_TOKEN != '' }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          node -e "const fs=require('fs');const path='packages/portaudit/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.version='${VERSION}';pkg.dependencies['@hehehai/port-audit']='${VERSION}';fs.writeFileSync(path, JSON.stringify(pkg, null, 2)+'\\n');"
+      - name: Publish portaudit
+        if: ${{ env.NPM_TOKEN != '' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken="$NODE_AUTH_TOKEN"
+          npm publish --access public packages/portaudit
+
   publish-brew:
     needs: release
     runs-on: macos-latest

@@ -34,6 +34,12 @@ npm i -g @hehehai/port-audit
 
 macOS only. The npm package ships a prebuilt binary.
 
+npx:
+
+```bash
+npx portaudit
+```
+
 GitHub Packages:
 
 ```bash
