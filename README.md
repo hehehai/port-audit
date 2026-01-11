@@ -2,7 +2,9 @@
 
 [![CI](https://github.com/hehehai/port-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/hehehai/port-audit/actions/workflows/ci.yml)
 
-<video src="https://cdn.actnow.dev/public/port-audit.mp4" width="800" controls></video>
+
+<div align="center"><video src="https://github.com/user-attachments/assets/7edb86a8-213f-4a78-8374-51814963ba2b" controls></video></div>
+
 
 A TUI tool for managing TCP listening ports on macOS.
 
