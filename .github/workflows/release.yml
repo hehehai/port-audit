@@ -163,7 +163,7 @@ jobs:
     steps:
       - name: Setup Homebrew
         if: ${{ env.HOMEBREW_TOKEN != '' }}
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
       - name: Debug brew config
         run: |
           if [ -n "$HOMEBREW_TOKEN" ]; then
@@ -187,20 +187,41 @@ jobs:
           HOMEBREW_GITHUB_API_TOKEN: ${{ env.HOMEBREW_TOKEN }}
           GH_TOKEN: ${{ env.HOMEBREW_TOKEN }}
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
           URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/port-audit-${{ github.ref_name }}-macos.tar.gz"
           curl -L "$URL" -o source.tar.gz
           SHA256=$(shasum -a 256 source.tar.gz | awk '{print $1}')
           brew tap "$HOMEBREW_TAP"
+
+          set +e
           OUTPUT=$(brew bump-formula-pr --no-audit --no-browse \
             --url "$URL" \
             --sha256 "$SHA256" \
-            "$HOMEBREW_FORMULA")
+            "$HOMEBREW_FORMULA" 2>&1)
+          STATUS=$?
+          set -e
+
           echo "$OUTPUT"
-          PR_URL=$(echo "$OUTPUT" | grep -Eo "https://github.com/[^ ]+" | tail -n 1)
+          PR_URL=$(echo "$OUTPUT" | grep -Eo "https://github.com/[^ ]+/pull/[0-9]+" | tail -n 1 || true)
+
+          if [ "$STATUS" -ne 0 ]; then
+            if echo "$OUTPUT" | grep -q "These pull requests are duplicates" || \
+               echo "$OUTPUT" | grep -q "new version and old version are both ${VERSION}"; then
+              echo "Homebrew formula already updated for ${VERSION}; continuing."
+            else
+              exit "$STATUS"
+            fi
+          fi
+
           if [ -n "$PR_URL" ]; then
-            gh pr merge --auto --squash "$PR_URL"
+            PR_STATE=$(gh pr view "$PR_URL" --json state --jq .state)
+            if [ "$PR_STATE" = "MERGED" ]; then
+              echo "Homebrew PR already merged: $PR_URL"
+            else
+              gh pr merge --squash --delete-branch "$PR_URL"
+            fi
           else
-            echo "No PR URL detected; skipping auto-merge."
+            echo "No Homebrew PR detected; skipping merge."
           fi
 
   publish-github:
