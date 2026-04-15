@@ -7,6 +7,8 @@ interface ProcessListProps {
 	processes: ProcessInfo[];
 	selectedIndex: number;
 	selectedProcess: ProcessInfo | null;
+	busy?: boolean;
+	busyProcess?: Pick<ProcessInfo, "pid" | "port"> | null;
 }
 
 const ROW_HEIGHT = 1;
@@ -15,6 +17,8 @@ export function ProcessList({
 	processes,
 	selectedIndex,
 	selectedProcess,
+	busy = false,
+	busyProcess = null,
 }: ProcessListProps) {
 	const scrollRef = useRef<ScrollBoxRenderable>(null);
 
@@ -73,16 +77,19 @@ export function ProcessList({
 					flexShrink: 0,
 				}}
 			>
-				<text fg={theme.textMuted} style={{ width: 8 }}>
+				<text fg={busy ? theme.primary : theme.textMuted} style={{ width: 8 }}>
 					PID
 				</text>
-				<text fg={theme.textMuted} style={{ width: 18 }}>
+				<text fg={busy ? theme.primary : theme.textMuted} style={{ width: 18 }}>
 					COMMAND
 				</text>
-				<text fg={theme.textMuted} style={{ width: 8 }}>
+				<text fg={busy ? theme.primary : theme.textMuted} style={{ width: 8 }}>
 					PORT
 				</text>
-				<text fg={theme.textMuted} style={{ flexGrow: 1 }}>
+				<text
+					fg={busy ? theme.primary : theme.textMuted}
+					style={{ flexGrow: 1 }}
+				>
 					USER
 				</text>
 			</box>
@@ -101,14 +108,23 @@ export function ProcessList({
 			>
 				{processes.map((proc) => {
 					const isSelected =
-						selectedProcess !== null &&
-						proc.pid === selectedProcess.pid &&
-						proc.port === selectedProcess.port;
+						(busyProcess !== null &&
+							proc.pid === busyProcess.pid &&
+							proc.port === busyProcess.port) ||
+						(selectedProcess !== null &&
+							proc.pid === selectedProcess.pid &&
+							proc.port === selectedProcess.port);
 					return (
 						<ProcessRow
 							key={`${proc.pid}-${proc.port}`}
 							process={proc}
 							selected={isSelected}
+							busy={busy}
+							busyTarget={
+								busyProcess !== null &&
+								proc.pid === busyProcess.pid &&
+								proc.port === busyProcess.port
+							}
 						/>
 					);
 				})}
@@ -120,10 +136,38 @@ export function ProcessList({
 interface ProcessRowProps {
 	process: ProcessInfo;
 	selected: boolean;
+	busy: boolean;
+	busyTarget: boolean;
 }
 
-function ProcessRow({ process, selected }: ProcessRowProps) {
-	const bg = selected ? theme.bgHighlight : undefined;
+function ProcessRow({ process, selected, busy, busyTarget }: ProcessRowProps) {
+	const bg = busyTarget
+		? theme.primary
+		: selected
+			? theme.bgHighlight
+			: undefined;
+	const pidColor = busyTarget
+		? theme.bg
+		: selected
+			? theme.warning
+			: busy
+				? theme.primary
+				: theme.text;
+	const commandColor = busyTarget
+		? theme.bg
+		: selected || busy
+			? theme.primary
+			: theme.text;
+	const portColor = busyTarget
+		? theme.bg
+		: busy
+			? theme.primary
+			: theme.accent;
+	const userColor = busyTarget
+		? theme.bg
+		: busy
+			? theme.primary
+			: theme.textMuted;
 
 	return (
 		<box
@@ -135,16 +179,16 @@ function ProcessRow({ process, selected }: ProcessRowProps) {
 				paddingRight: 1,
 			}}
 		>
-			<text fg={selected ? theme.warning : theme.text} style={{ width: 8 }}>
+			<text fg={pidColor} style={{ width: 8 }}>
 				{process.pid}
 			</text>
-			<text fg={selected ? theme.primary : theme.text} style={{ width: 18 }}>
+			<text fg={commandColor} style={{ width: 18 }}>
 				{process.command.slice(0, 16)}
 			</text>
-			<text fg={theme.accent} style={{ width: 8 }}>
+			<text fg={portColor} style={{ width: 8 }}>
 				{process.port}
 			</text>
-			<text fg={theme.textMuted} style={{ flexGrow: 1 }}>
+			<text fg={userColor} style={{ flexGrow: 1 }}>
 				{process.user}
 			</text>
 		</box>

@@ -9,8 +9,9 @@ import { useProcesses } from "./hooks/useProcesses";
 import { theme } from "./theme";
 
 export function App() {
-	const { processes, loading, refresh } = useProcesses();
-	const { killing, lastResult, kill, clearResult } = useKillProcess();
+	const { killing, killingTarget, lastResult, kill, clearResult } =
+		useKillProcess();
+	const { processes, loading, refresh } = useProcesses({ paused: killing });
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [statusMessage, setStatusMessage] = useState<string | undefined>();
 	const [searchMode, setSearchMode] = useState(false);
@@ -39,9 +40,13 @@ export function App() {
 	useEffect(() => {
 		if (lastResult) {
 			if (lastResult.success) {
-				setStatusMessage(`Killed PID ${lastResult.pid}`);
+				setStatusMessage(
+					`Killed port ${lastResult.port} (PID ${lastResult.pid})`,
+				);
 			} else {
-				setStatusMessage(`Failed: ${lastResult.error}`);
+				setStatusMessage(
+					`Failed to kill port ${lastResult.port}: ${lastResult.error}`,
+				);
 			}
 			const timer = setTimeout(() => {
 				setStatusMessage(undefined);
@@ -73,6 +78,10 @@ export function App() {
 			globalThis.__cleanup?.();
 		}
 
+		if (killing) {
+			return;
+		}
+
 		if (key.name === "/") {
 			setSearchMode(true);
 			return;
@@ -89,17 +98,16 @@ export function App() {
 		}
 
 		if (key.name === "r") {
-			refresh();
+			void refresh();
 			setStatusMessage("Refreshing...");
 			setTimeout(() => setStatusMessage(undefined), 1000);
 		}
 
 		if (
 			(key.name === "return" || key.name === "x") &&
-			selectedProcess &&
-			!killing
+			selectedProcess
 		) {
-			kill(selectedProcess.pid);
+			void kill(selectedProcess);
 		}
 	});
 
@@ -116,7 +124,7 @@ export function App() {
 			<Header
 				processCount={filteredProcesses.length}
 				totalCount={processes.length}
-				loading={loading}
+				loading={loading || killing}
 				searchMode={searchMode}
 				searchQuery={searchQuery}
 				onSearchChange={setSearchQuery}
@@ -125,11 +133,18 @@ export function App() {
 				processes={filteredProcesses}
 				selectedIndex={selectedIndex}
 				selectedProcess={selectedProcess}
+				busy={killing}
+				busyProcess={killingTarget}
 			/>
 			<ProcessDetail process={selectedProcess} />
 			<StatusBar
-				message={killing ? "Killing..." : statusMessage}
+				message={
+					killingTarget
+						? `Killing port ${killingTarget.port} (PID ${killingTarget.pid})...`
+						: statusMessage
+				}
 				searchMode={searchMode}
+				busy={killing}
 			/>
 		</box>
 	);

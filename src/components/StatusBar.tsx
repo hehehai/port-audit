@@ -4,6 +4,7 @@ import { theme } from "../theme";
 interface StatusBarProps {
 	message?: string;
 	searchMode: boolean;
+	busy?: boolean;
 }
 
 function KeyHint({
@@ -23,7 +24,11 @@ function KeyHint({
 	);
 }
 
-export function StatusBar({ message, searchMode }: StatusBarProps) {
+export function StatusBar({
+	message,
+	searchMode,
+	busy = false,
+}: StatusBarProps) {
 	return (
 		<box style={{ flexDirection: "column", flexShrink: 0 }}>
 			<Divider />
@@ -40,6 +45,8 @@ export function StatusBar({ message, searchMode }: StatusBarProps) {
 							<KeyHint keyName="esc" label="clear" keyColor={theme.primary} />
 							<KeyHint keyName="↑↓" label="navigate" keyColor={theme.text} />
 						</>
+					) : busy ? (
+						<text fg={theme.primary}>List locked while killing</text>
 					) : (
 						<>
 							<KeyHint keyName="↑↓" label="navigate" keyColor={theme.text} />
@@ -50,7 +57,7 @@ export function StatusBar({ message, searchMode }: StatusBarProps) {
 						</>
 					)}
 				</box>
-				{message && <text fg={theme.warning}>{message}</text>}
+				{message && <text fg={busy ? theme.primary : theme.warning}>{message}</text>}
 			</box>
 		</box>
 	);

@@ -128,6 +128,23 @@ describe("components", () => {
 		renderer.destroy();
 	});
 
+	it("StatusBar shows locked state while killing", async () => {
+		const { renderOnce, captureCharFrame, renderer } = await testRender(
+			<StatusBar
+				message="Killing port 3001 (PID 55)..."
+				searchMode={false}
+				busy={true}
+			/>,
+			{ width: 80, height: 4 },
+		);
+
+		await renderOnce();
+		const frame = captureCharFrame();
+		expect(frame).toContain("List locked while killing");
+		expect(frame).toContain("Killing port 3001");
+		renderer.destroy();
+	});
+
 	it("SearchInput shows result count when filtered", async () => {
 		const { renderOnce, captureCharFrame, renderer } = await testRender(
 			<SearchInput
